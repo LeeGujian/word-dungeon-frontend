@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Word Dungeon · AI Image Description Challenge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 55%, #000 100%);
+      color: #e5e7eb;
+    }
+    .wrapper {
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 20px;
+      border-radius: 18px;
+      background: rgba(15,23,42,0.96);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.8);
+      border: 1px solid rgba(148,163,184,0.5);
+    }
+    h1 {
+      margin: 0 0 6px;
+      text-align: center;
+      font-size: 1.8rem;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-bottom: 18px;
+    }
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: rgba(15,23,42,0.8);
+    }
+    .badge-pass {
+      border-color: rgba(34,197,94,0.9);
+      background: rgba(22,163,74,0.18);
+      color: #bbf7d0;
+    }
+    .badge-fail {
+      border-color: rgba(248,113,113,0.9);
+      background: rgba(248,113,113,0.18);
+      color: #fecaca;
+    }
+    .progress {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #020617;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-inner {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+      transition: width .3s ease-out;
+    }
+    .layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+    .left, .right {
+      flex: 1 1 300px;
+      min-width: 0;
+    }
+    .scene-img {
+      width: 100%;
+      max-height: 260px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: #020617;
+      border: 1px solid rgba(55,65,81,0.9);
+    }
+    .hint-box {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    .hint-keywords {
+      margin-top: 4px;
+      font-size: 0.85rem;
+      color: #e5e7eb;
+    }
+    .label {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 170px;
+      border-radius: 14px;
+      border: 1px solid rgba(55,65,81,0.9);
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.8);
+    }
+    .textarea-hint {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    .btn-row {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #3b82f6, #22c55e);
+      color: #f9fafb;
+    }
+    .btn-secondary {
+      background: rgba(17,24,39,0.9);
+      color: #e5e7eb;
+      border: 1px solid rgba(75,85,99,0.9);
+    }
+    .btn-secondary:disabled,
+    .btn-primary:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    .panels {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+    .panel {
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: rgba(3,7,18,0.9);
+      border: 1px solid rgba(31,41,55,1);
+    }
+    .panel-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 0.86rem;
+    }
+    .score-big {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .score-pass { color: #4ade80; }
+    .score-fail { color: #f97373; }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+      background: rgba(15,23,42,0.96);
+      border-radius: 8px;
+      padding: 6px 8px;
+      border: 1px solid rgba(31,41,55,1);
+    }
+    .footer-note {
+      margin-top: 18px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      text-align: center;
+    }
+    @media (max-width: 640px) {
+      .wrapper { margin: 10px; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <h1>Word Dungeon · AI Image Description Challenge</h1>
+  <div class="subtitle">
+    7 floors × 7 rooms. Each room shows a random image based on a theme.<br>
+    You can write your description in <b>English or German</b>. The AI will detect the language automatically,
+    score your text (0–1000), point out grammar issues and suggest a better version. Score ≥ <b>600</b> to pass.
+  </div>
+
+  <div class="status-row">
+    <div>Floor: <b id="floorLabel">1</b> / 7</div>
+    <div>Room: <b id="roomLabel">1</b> / 7</div>
+    <div>Cleared rooms: <b id="clearedLabel">0</b> / 49</div>
+    <div id="badge" class="badge">Not evaluated</div>
+  </div>
+
+  <div class="progress">
+    <div id="progressInner" class="progress-inner"></div>
+  </div>
+
+  <div class="layout">
+    <div class="left">
+      <img id="sceneImg" class="scene-img" src="" alt="Scene image" />
+      <div class="hint-box">
+        Scene theme: <span id="sceneTheme"></span><br />
+        Tags for the AI (it does NOT see the image, only these tags and your text):
+        <div class="hint-keywords" id="hintKeywords"></div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="label">Your description (English or German)</div>
+      <textarea id="desc" placeholder="Write 3–6 sentences. The AI will reply in the same language you use."></textarea>
+      <div class="textarea-hint">
+        Try to describe people, place, actions, time, reasons and feelings.
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="scoreBtn">Ask AI to evaluate</button>
+        <button class="btn-secondary" id="nextBtn" disabled>Next room ▶</button>
+      </div>
+
+      <div class="panels">
+        <div class="panel" id="scorePanel" style="display:none;">
+          <div class="panel-title">Score</div>
+          <div>
+            Total score:
+            <span id="scoreValue" class="score-big">0</span> / 1000
+            (<span id="scoreResultText">not evaluated</span>)
+          </div>
+          <div id="scoreBreakdown"></div>
+        </div>
+
+        <div class="panel" id="feedbackPanel" style="display:none;">
+          <div class="panel-title">Feedback from AI</div>
+          <div><b>Explanation:</b></div>
+          <pre id="aiExplanation"></pre>
+          <div><b>Grammar issues (if any):</b></div>
+          <pre id="aiGrammar"></pre>
+        </div>
+
+        <div class="panel" id="betterPanel" style="display:none;">
+          <div class="panel-title">Improved version (from AI)</div>
+          <pre id="aiBetter"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Note: The model cannot actually “see” the image. It only sees the scene tags and your text.
+  </div>
+</div>
+
+<script>
+  // ======= CONFIG: 后端地址，如果你的项目域名不同，只改这一行 =======
+  const BACKEND_URL = "https://word-dungeon-backend.vercel.app/api/eval";
+
+  // 7 floors × 7 rooms: each has theme + tags (for AI + for image seed)
+  const dungeon = [
+    [ // Floor 1 – Everyday life
+      { theme: "Park with a dog", tags: "girl,dog,park,sunny,playing" },
+      { theme: "Family in the living room", tags: "family,sofa,TV,relaxing" },
+      { theme: "Cooking in the kitchen", tags: "kitchen,cooking,dinner,food" },
+      { theme: "Shopping in a supermarket", tags: "supermarket,trolley,shelves,cashier" },
+      { theme: "Busy street", tags: "street,cars,people,city" },
+      { theme: "Playground", tags: "children,playground,swing,slide" },
+      { theme: "Bedroom evening", tags: "bedroom,reading,lamp,quiet" }
+    ],
+    [ // Floor 2 – School & learning
+      { theme: "Classroom lesson", tags: "classroom,teacher,students,blackboard" },
+      { theme: "Studying in the library", tags: "library,books,table,reading" },
+      { theme: "Writing an exam", tags: "exam,desk,paper,nervous" },
+      { theme: "School yard break", tags: "schoolyard,friends,chat,rest" },
+      { theme: "Online learning", tags: "computer,online class,headphones" },
+      { theme: "Science lab", tags: "lab,experiment,coat,safety" },
+      { theme: "Graduation day", tags: "graduation,gown,ceremony,photo" }
+    ],
+    [ // Floor 3 – City & transport
+      { theme: "Train station", tags: "train,station,platform,luggage" },
+      { theme: "Bus stop", tags: "bus,stop,waiting,people" },
+      { theme: "Metro ride", tags: "subway,metro,crowd,city" },
+      { theme: "Airport gate", tags: "airport,airplane,boarding,security" },
+      { theme: "Cycling in the city", tags: "bicycle,bike lane,traffic" },
+      { theme: "Traffic jam", tags: "cars,road,traffic jam" },
+      { theme: "Night city lights", tags: "city,night,lights,skyline" }
+    ],
+    [ // Floor 4 – Work & jobs
+      { theme: "Office meeting", tags: "office,meeting,laptop,team" },
+      { theme: "Restaurant kitchen", tags: "chef,kitchen,restaurant,cooking" },
+      { theme: "Factory line", tags: "factory,workers,machines" },
+      { theme: "Hospital corridor", tags: "doctor,nurse,patient,hospital" },
+      { theme: "Construction site", tags: "construction,workers,helmets" },
+      { theme: "Hotel lobby", tags: "hotel,reception,lobby,guests" },
+      { theme: "Police on the street", tags: "police,car,street,patrol" }
+    ],
+    [ // Floor 5 – Free time & nature
+      { theme: "Beach holiday", tags: "beach,sea,vacation,sand" },
+      { theme: "Mountain hike", tags: "mountain,hiking,backpack" },
+      { theme: "Forest walk", tags: "forest,trees,sunlight" },
+      { theme: "Jogging in the park", tags: "park,jogging,exercise" },
+      { theme: "Lake with a boat", tags: "lake,boat,relax" },
+      { theme: "Camping at night", tags: "camping,tent,campfire,stars" },
+      { theme: "Snowy day", tags: "snow,winter,snowman,kids" }
+    ],
+    [ // Floor 6 – Health & services
+      { theme: "Fitness gym", tags: "gym,training,weights" },
+      { theme: "Pharmacy", tags: "pharmacy,medicine,shelves" },
+      { theme: "Dentist", tags: "dentist,clinic,chair" },
+      { theme: "Hair salon", tags: "hairdresser,salon,haircut" },
+      { theme: "Supermarket groceries", tags: "supermarket,food,basket" },
+      { theme: "Local market", tags: "market,fruit,vegetables" },
+      { theme: "Cleaning at home", tags: "cleaning,vacuum,housework" }
+    ],
+    [ // Floor 7 – Fantasy & adventure
+      { theme: "Dark dungeon", tags: "dungeon,torch,stone,dark" },
+      { theme: "Castle at night", tags: "castle,moon,night" },
+      { theme: "Dragon in the sky", tags: "dragon,fire,sky" },
+      { theme: "Knight in armor", tags: "knight,sword,armor" },
+      { theme: "Wizard casting a spell", tags: "wizard,magic,light" },
+      { theme: "Village market", tags: "village,market,people" },
+      { theme: "Battlefield", tags: "battle,warrior,field" }
+    ]
+  ];
+
+  const totalFloors = dungeon.length;
+  const roomsPerFloor = dungeon[0].length;
+  const totalRooms = totalFloors * roomsPerFloor;
+
+  let floorIndex = 0;
+  let roomIndex = 0;
+  let clearedCount = 0;
+
+  const floorLabel = document.getElementById("floorLabel");
+  const roomLabel = document.getElementById("roomLabel");
+  const clearedLabel = document.getElementById("clearedLabel");
+  const badge = document.getElementById("badge");
+  const progressInner = document.getElementById("progressInner");
+
+  const sceneImg = document.getElementById("sceneImg");
+  const sceneThemeEl = document.getElementById("sceneTheme");
+  const hintKeywordsEl = document.getElementById("hintKeywords");
+
+  const descInput = document.getElementById("desc");
+  const scoreBtn = document.getElementById("scoreBtn");
+  const nextBtn = document.getElementById("nextBtn");
+
+  const scorePanel = document.getElementById("scorePanel");
+  const scoreValueEl = document.getElementById("scoreValue");
+  const scoreResultTextEl = document.getElementById("scoreResultText");
+  const scoreBreakdownEl = document.getElementById("scoreBreakdown");
+
+  const feedbackPanel = document.getElementById("feedbackPanel");
+  const betterPanel = document.getElementById("betterPanel");
+  const aiExplanationEl = document.getElementById("aiExplanation");
+  const aiGrammarEl = document.getElementById("aiGrammar");
+  const aiBetterEl = document.getElementById("aiBetter");
+
+  function randomImageUrl(tags) {
+    const seed = encodeURIComponent(tags);
+    return `https://picsum.photos/seed/${seed}/800/500`;
+  }
+
+  function updateProgress() {
+    const idx = floorIndex * roomsPerFloor + roomIndex;
+    const percent = (idx / (totalRooms - 1)) * 100;
+    progressInner.style.width = percent + "%";
+  }
+
+  function loadRoom() {
+    const room = dungeon[floorIndex][roomIndex];
+    floorLabel.textContent = floorIndex + 1;
+    roomLabel.textContent = roomIndex + 1;
+    clearedLabel.textContent = clearedCount;
+
+    sceneImg.src = randomImageUrl(room.tags);
+    sceneThemeEl.textContent = room.theme;
+    hintKeywordsEl.textContent = room.tags;
+
+    badge.textContent = "Not evaluated";
+    badge.className = "badge";
+
+    descInput.value = "";
+    scorePanel.style.display = "none";
+    feedbackPanel.style.display = "none";
+    betterPanel.style.display = "none";
+    nextBtn.disabled = true;
+
+    updateProgress();
+  }
+
+  async function evaluateWithAI() {
+    const raw = descInput.value.trim();
+    if (raw.length < 20) {
+      alert("Your text is very short. Please write at least 2–3 sentences.");
+      return;
+    }
+
+    const room = dungeon[floorIndex][roomIndex];
+
+    scoreBtn.disabled = true;
+    scoreBtn.textContent = "AI is thinking…";
+    badge.textContent = "Evaluating…";
+    badge.className = "badge";
+
+    try {
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: raw,
+          theme: room.theme,
+          tags: room.tags
+        })
+      });
+      if (!res.ok) {
+        throw new Error("Backend error: " + res.status);
+      }
+      const data = await res.json();
+
+      const score = data.score ?? 0;
+      const passed = !!data.passed;
+
+      scorePanel.style.display = "block";
+      feedbackPanel.style.display = "block";
+      betterPanel.style.display = "block";
+
+      scoreValueEl.textContent = score;
+      scoreValueEl.className = "score-big " + (passed ? "score-pass" : "score-fail");
+      scoreResultTextEl.textContent = passed ? "PASS" : "NOT PASS";
+
+      scoreBreakdownEl.innerHTML = data.breakdown || "";
+      aiExplanationEl.textContent = data.explanation || "(No explanation returned.)";
+
+      if (Array.isArray(data.grammarIssues) && data.grammarIssues.length > 0) {
+        aiGrammarEl.textContent = data.grammarIssues.map((g, i) => `${i + 1}. ${g}`).join("\n");
+      } else {
+        aiGrammarEl.textContent = "No clear grammar issues reported by the AI (or it did not mention them).";
+      }
+
+      aiBetterEl.textContent = data.betterVersion || "(No improved version returned.)";
+
+      if (passed) {
+        badge.textContent = "Passed";
+        badge.className = "badge badge-pass";
+        nextBtn.disabled = false;
+        clearedCount++;
+        clearedLabel.textContent = clearedCount;
+      } else {
+        badge.textContent = "Not passed";
+        badge.className = "badge badge-fail";
+        nextBtn.disabled = true;
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error while talking to the AI backend. Open DevTools console for details.");
+      badge.textContent = "Error";
+      badge.className = "badge badge-fail";
+    } finally {
+      scoreBtn.disabled = false;
+      scoreBtn.textContent = "Ask AI to evaluate";
+    }
+  }
+
+  function goNextRoom() {
+    if (roomIndex < roomsPerFloor - 1) {
+      roomIndex++;
+    } else {
+      if (floorIndex < totalFloors - 1) {
+        floorIndex++;
+        roomIndex = 0;
+      } else {
+        alert("You have reached the end of the dungeon! You can refresh the page to start again.");
+        return;
+      }
+    }
+    loadRoom();
+  }
+
+  scoreBtn.addEventListener("click", evaluateWithAI);
+  nextBtn.addEventListener("click", goNextRoom);
+
+  loadRoom();
+</script>
+</body>
+</html>
